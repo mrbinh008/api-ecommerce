@@ -2,7 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\UserController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -17,3 +20,25 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register'])->name('register');
+    Route::post('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('email/verification-notification', [EmailVerificationController::class, 'sendVerificationEmail'])->middleware('auth:api','throttle:6,1')->name('verification.send');
+    Route::get('verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed','auth:api')->name('verification.verify');
+    Route::post('forgot-password', [ForgotPasswordController::class, 'forgotPassword'])->name('forgot-password');
+    Route::post('reset-password', [ForgotPasswordController::class, 'reset'])->name('password.reset');
+});
+//user routes
+Route::prefix('user')->group(function () {
+    Route::get('/', [UserController::class, 'index']);
+    Route::put('/', [UserController::class, 'update']);
+    Route::delete('/', [UserController::class, 'destroy']);
+    Route::patch('/change-password', [UserController::class, 'changePassword']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
+
+//Route::post('/test', [AuthController::class, 'test']);
+
+
+
