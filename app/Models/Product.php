@@ -14,9 +14,8 @@ class Product extends Model
     protected $fillable = [
         'product_name',
         'sku',
-        'regular_price',
-        'discount_price',
-        'quantity',
+        'slug',
+        'brand_id',
         'description',
         'short_description',
         'product_weight',
@@ -29,19 +28,15 @@ class Product extends Model
         return $this->belongsToMany(Category::class, 'product_categories');
     }
 
-    public function attributes()
-    {
-        return $this->belongsToMany(Attribute::class, 'product_attributes');
-    }
 
     public function images()
     {
         return $this->hasMany(Gallery::class);
     }
 
-    public function variant()
+    public function brand()
     {
-        return $this->hasMany(Variant::class);
+        return $this->belongsTo(Brand::class);
     }
 
     public function coupons()
@@ -52,5 +47,25 @@ class Product extends Model
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'product_tags');
+    }
+
+    public function productOptions()
+    {
+        return $this->hasMany(ProductOption::class);
+    }
+
+    public function productSkus()
+    {
+        return $this->hasMany(ProductSku::class);
+    }
+
+    public function productSkuValues()
+    {
+        return $this->hasMany(ProductSkuValue::class);
+    }
+
+    public function productOptionValue()
+    {
+        return $this->hasMany(ProductOptionValue::class);
     }
 }

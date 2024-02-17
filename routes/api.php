@@ -28,9 +28,10 @@ Route::prefix('auth')->group(function () {
     Route::get('verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed','auth:api')->name('verification.verify');
     Route::post('forgot-password', [ForgotPasswordController::class, 'forgotPassword'])->name('forgot-password');
     Route::post('reset-password', [ForgotPasswordController::class, 'reset'])->name('password.reset');
+    Route::post('/refresh-token', [AuthController::class, 'refreshToken'])->name('refresh-token')->middleware('auth:api');
 });
 //user routes
-Route::prefix('user')->group(function () {
+Route::prefix('user')->middleware(['auth:api'])->group(function () {
     Route::get('/', [UserController::class, 'index']);
     Route::put('/', [UserController::class, 'update']);
     Route::delete('/', [UserController::class, 'destroy']);

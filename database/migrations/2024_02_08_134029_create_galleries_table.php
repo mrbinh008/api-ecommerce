@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('product_id');
             $table->string('image');
-            $table->boolean('is_main')->default(false);
-            $table->boolean('thumbnail')->default(false);
+            $table->boolean('is_thumbnail')->default(false);
             $table->timestamps();
         });
     }

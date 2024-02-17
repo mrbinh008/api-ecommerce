@@ -14,10 +14,10 @@ class UserController extends Controller
 
     public function index()
     {
-        $user = \Cache::remember('users'.auth()->user()->id, 60 * 60 * 24, function () {
-            return User::find(auth()->user()->id);
-        });
-//        $user = User::find(auth()->user()->id);
+//        $user = \Cache::remember('users'.auth()->user()->id, 60 * 60 * 24, function () {
+//            return User::find(auth()->user()->id);
+//        });
+        $user = User::find(auth()->user()->id);
         if (!$user) return responseCustom(null, Response::HTTP_OK, 'User not found');
         return responseCustom($user, Response::HTTP_OK, 'Get user success');
     }
@@ -35,7 +35,7 @@ class UserController extends Controller
                 $user->name = $request->name;
                 $user->email = $request->email;
                 $user->avatar = $avatar;
-                $user->active = $request->active;
+                $user->is_active = $request->is_active;
                 $user->syncRoles([$request->role]);
                 $user->save();
                 return responseCustom($user, Response::HTTP_OK, 'Update user success');

@@ -29,7 +29,7 @@ class CustomerController extends Controller
                 'email' => $user->email,
                 'avatar' => $user->avatar,
                 'role' => $user->getRoleNames(),
-                'status' => $user->active,
+                'status' => $user->is_active,
                 'created_at' => $user->created_at,
             ];
         });
@@ -48,7 +48,7 @@ class CustomerController extends Controller
             $user->email = $request->email;
             $user->password = bcrypt($request->password);
             $user->avatar = $avatar;
-            $user->active = $request->active;
+            $user->is_active = $request->is_active;
             $user->assignRole($request->role);
             $user->save();
             return responseCustom($user, 200, 'Create user success');
@@ -80,7 +80,7 @@ class CustomerController extends Controller
                 $user->name = $request->name;
                 $user->email = $request->email;
                 $user->avatar = $avatar;
-                $user->active = $request->active;
+                $user->is_active = $request->is_active;
                 $user->syncRoles([$request->role]);
                 $user->save();
                 return responseCustom($user, 200, 'Update user success');
@@ -114,7 +114,7 @@ class CustomerController extends Controller
     {
         $user = User::find($request->id);
         if ($user) {
-            $user->active = !$user->active;
+            $user->is_active = !$user->is_active;
             $user->save();
             return responseCustom($user, 200, 'Change status success');
         } else {
@@ -133,7 +133,7 @@ class CustomerController extends Controller
                     'email' => $user->email,
                     'avatar' => $user->avatar,
                     'role' => $user->getRoleNames(),
-                    'status' => $user->active,
+                    'status' => $user->is_active,
                     'created_at' => $user->created_at,
                 ];
             });

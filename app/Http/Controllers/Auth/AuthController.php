@@ -90,6 +90,19 @@ class AuthController extends Controller
         );
     }
 
+    public function refreshToken()
+    {
+        $token = auth()->user()->createToken('token-api')->accessToken;
+        return responseCustom(
+            [
+                'access_token' => $token,
+                'user' => auth()->user()
+            ],
+            200,
+            'Refresh Token Success'
+        );
+    }
+
     public function test()
     {
         event(new TestMail('test@gmail.com', 'Test'));
