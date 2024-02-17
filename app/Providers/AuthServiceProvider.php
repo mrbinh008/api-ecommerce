@@ -26,7 +26,7 @@ class AuthServiceProvider extends ServiceProvider
     {
 //        Passport::tokensExpireIn(now()->addDays(15));
 //        Passport::refreshTokensExpireIn(now()->addDays(1));
-        Passport::personalAccessTokensExpireIn(now()->minute(30));
+        Passport::personalAccessTokensExpireIn(now()->addDays(30));
 
         VerifyEmail::toMailUsing(function ($notifiable, $url) {
             return (new MailMessage)

@@ -2,7 +2,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\CategoryController;
-
+use App\Http\Controllers\Admin\ProductController;
 
 Route::prefix('customer')->group(function () {
     Route::get('/', [CustomerController::class, 'index']);
@@ -21,5 +21,13 @@ Route::prefix('category')->group(function () {
     Route::delete('/', [CategoryController::class, 'destroy']);
 });
 
+Route::prefix('product')->group(function () {
+    Route::get('/', [ProductController::class, 'index']);
+    Route::post('/', [ProductController::class, 'store']);
+//    Route::put('/', [ProductController::class, 'update']);
+//    Route::delete('/', [ProductController::class, 'destroy']);
+//    Route::patch('/change-status', [ProductController::class, 'changeStatus']);
+//    Route::get('/search', [ProductController::class, 'search']);
+});
 
 

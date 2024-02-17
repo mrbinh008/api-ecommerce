@@ -19,8 +19,8 @@ class Product extends Model
         'description',
         'short_description',
         'product_weight',
-        'product_note',
-        'published'
+        'is_published',
+        'is_featured',
     ];
 
     public function categories()
@@ -49,23 +49,30 @@ class Product extends Model
         return $this->belongsToMany(Tag::class, 'product_tags');
     }
 
-    public function productOptions()
-    {
-        return $this->hasMany(ProductOption::class);
-    }
-
-    public function productSkus()
+    public function skus()
     {
         return $this->hasMany(ProductSku::class);
     }
 
-    public function productSkuValues()
+    public function options()
     {
-        return $this->hasMany(ProductSkuValue::class);
+        return $this->hasMany(Option::class);
     }
 
-    public function productOptionValue()
+//    public function options()
+//    {
+//        return $this->hasManyThrough(Option::class, ProductSku::class);
+//    }
+
+    public function optionValues()
     {
-        return $this->hasMany(ProductOptionValue::class);
+        return $this->hasMany(OptionValue::class);
     }
+
+    public function skuValues()
+    {
+        return $this->hasMany(SkuValue::class);
+    }
+
+
 }

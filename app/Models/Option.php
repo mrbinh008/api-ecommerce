@@ -5,23 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductOption extends Model
+class Option extends Model
 {
     use HasFactory;
 
-    public $table = 'product_options';
+    public $table = 'options';
 
-    protected $fillable = ['product_id', 'option_name'];
+    protected $fillable = [
+        'product_id',
+        'option_name'
+    ];
 
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function productOptionValues()
+    public function values()
     {
-        return $this->hasMany(ProductOptionValue::class);
+        return $this->hasMany(OptionValue::class);
     }
-
 
 }

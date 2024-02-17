@@ -11,17 +11,21 @@ class ProductSku extends Model
 
     public $table = 'product_skus';
 
-    protected $fillable = ['product_id', 'sku', 'regular_price', 'discount_price', 'quantity'];
+    protected $fillable = [
+        'product_id',
+        'sku',
+        'price',
+        'quantity',
+    ];
 
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function productSkuValues()
+    public function values()
     {
-        return $this->hasMany(ProductSkuValue::class);
+//        return $this->belongsToMany(SkuValue::class, 'sku_values')->withTimestamps();
+        return $this->hasMany(SkuValue::class,  'sku_id');
     }
-
-
 }

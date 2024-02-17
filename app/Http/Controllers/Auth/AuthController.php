@@ -70,10 +70,20 @@ class AuthController extends Controller
         }
         RateLimiter::clear($request->throttleKey());
         $token = $user->createToken('token-api')->accessToken;
+        $userDetail=[
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone_number'=>$user->phone_number,
+            'avatar'=>$user->avatar,
+            'is_active'=>$user->is_active,
+            'role'=>$user->getRoleNames()->first(),
+        ];
+
         return responseCustom(
             [
                 'access_token' => $token,
-                'user' => $user
+                'user' => $userDetail,
             ],
             200,
             'Login Success'
