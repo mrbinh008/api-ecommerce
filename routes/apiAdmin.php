@@ -24,8 +24,8 @@ Route::prefix('category')->group(function () {
 Route::prefix('product')->group(function () {
     Route::get('/', [ProductController::class, 'index']);
     Route::post('/', [ProductController::class, 'store']);
-//    Route::put('/', [ProductController::class, 'update']);
-//    Route::delete('/', [ProductController::class, 'destroy']);
+    Route::put('/', [ProductController::class, 'update']);
+    Route::delete('/', [ProductController::class, 'destroy']);
 //    Route::patch('/change-status', [ProductController::class, 'changeStatus']);
 //    Route::get('/search', [ProductController::class, 'search']);
 });

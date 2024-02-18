@@ -26,4 +26,8 @@ class Option extends Model
         return $this->hasMany(OptionValue::class);
     }
 
+    public function scopeWhereProductId($query, $productId)
+    {
+        return $query->where('product_id', $productId);
+    }
 }

@@ -26,9 +26,19 @@ class OptionValue extends Model
     {
         return $this->belongsTo(Product::class);
     }
-//
-//    public function skuValues()
-//    {
-//        return $this->hasMany(SkuValue::class);
-//    }
+
+    public function skuValues()
+    {
+        return $this->hasMany(SkuValue::class);
+    }
+
+    public function scopeWhereProductId($query, $productId)
+    {
+        return $query->where('product_id', $productId);
+    }
+
+    public function scopeWhereOptionId($query, $optionId)
+    {
+        return $query->where('option_id', $optionId);
+    }
 }

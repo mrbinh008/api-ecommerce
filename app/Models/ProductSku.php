@@ -25,7 +25,11 @@ class ProductSku extends Model
 
     public function values()
     {
-//        return $this->belongsToMany(SkuValue::class, 'sku_values')->withTimestamps();
         return $this->hasMany(SkuValue::class,  'sku_id');
+    }
+
+    public function scopeWhereProductId($query, $productId)
+    {
+        return $query->where('product_id', $productId);
     }
 }

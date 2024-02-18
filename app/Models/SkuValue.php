@@ -37,4 +37,29 @@ class SkuValue extends Model
     {
         return $this->belongsTo(OptionValue::class);
     }
+
+    public function scopeWhereProductId($query, $productId)
+    {
+        return $query->where('product_id', $productId);
+    }
+
+    public function scopeWhereSkuId($query, $skuId)
+    {
+        return $query->where('sku_id', $skuId);
+    }
+
+    public function scopeWhereOptionId($query, $optionId)
+    {
+        return $query->where('option_id', $optionId);
+    }
+
+    public function scopeWhereValueId($query, $valueId)
+    {
+        return $query->where('value_id', $valueId);
+    }
+
+    public function scopeWhereOptionValue($query, $optionId, $valueId)
+    {
+        return $query->where('option_id', $optionId)->where('value_id', $valueId);
+    }
 }
