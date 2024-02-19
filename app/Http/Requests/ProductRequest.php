@@ -72,7 +72,7 @@ class ProductRequest extends FormRequest
                         'max:255',
                         function ($attribute, $value, $fail) {
                             $skuId = explode('.', $attribute)[1];
-                            $uniqueRule = Rule::unique('product_skus', 'sku')->ignore($this->skus[$skuId]['id']);
+                            $uniqueRule = Rule::unique('product_skus', 'sku')->ignore($skuId, 'id');
                             $validator = Validator::make([$attribute => $value], [$attribute => $uniqueRule]);
                             if ($validator->fails()) {
                                 $fail($validator->errors()->first($attribute));

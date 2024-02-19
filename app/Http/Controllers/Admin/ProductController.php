@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
+use App\Traits\ImageUploadTrait;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ProductSku;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
+    use ImageUploadTrait;
+
     /**
      * Get list product
      *
@@ -29,40 +32,42 @@ class ProductController extends Controller
                 'id' => $product->id,
                 'product_name' => $product->product_name,
                 'sku' => $product->sku,
-                'brand_id' => $product->brand_id,
+                'brand_name' => $product->brand->name,
                 'description' => $product->description,
                 'short_description' => $product->short_description,
                 'product_weight' => $product->product_weight,
                 'is_published' => $product->is_published,
                 'is_featured' => $product->is_featured,
-                'options' => $product->options->transform(function ($option) {
-                    return [
-                        'id' => $option->id,
-                        'option_name' => $option->option_name,
-                        'option_values' => $option->values->transform(function ($value) {
-                            return [
-                                'id' => $value->id,
-                                'value' => $value->value_name,
-                            ];
-                        }),
-                    ];
-                }),
-                'skus' => $product->skus->transform(function ($sku) {
-                    return [
-                        'id' => $sku->id,
-                        'sku' => $sku->sku,
-                        'price' => $sku->price,
-                        'quantity' => $sku->quantity,
-                        'values' => $sku->values->transform(function ($value) {
-                            return [
-                                'option_id' => $value->option->id,
-                                'option_name' => $value->option->option_name,
-                                'value_id' => $value->value->id,
-                                'value' => $value->value->value_name,
-                            ];
-                        }),
-                    ];
-                }),
+                'total_quantity' => $product->skus->count(),
+                'price' => $product->skus->min('price') !== $product->skus->max('price') ? $product->skus->min('price') . ' - ' . $product->skus->max('price') : $product->skus->min('price'),
+//                'options' => $product->options->transform(function ($option) {
+//                    return [
+//                        'id' => $option->id,
+//                        'option_name' => $option->option_name,
+//                        'option_values' => $option->values->transform(function ($value) {
+//                            return [
+//                                'id' => $value->id,
+//                                'value' => $value->value_name,
+//                            ];
+//                        }),
+//                    ];
+//                }),
+//                'skus' => $product->skus->transform(function ($sku) {
+//                    return [
+//                        'id' => $sku->id,
+//                        'sku' => $sku->sku,
+//                        'price' => $sku->price,
+//                        'quantity' => $sku->quantity,
+//                        'values' => $sku->values->transform(function ($value) {
+//                            return [
+//                                'option_id' => $value->option->id,
+//                                'option_name' => $value->option->option_name,
+//                                'value_id' => $value->value->id,
+//                                'value' => $value->value->value_name,
+//                            ];
+//                        }),
+//                    ];
+//                }),
             ];
         });
         return responsePaginate($products, $data, 200, 'Get list product success');
@@ -79,7 +84,7 @@ class ProductController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(ProductRequest $request)
+    public function store(ProductRequest $request): \Illuminate\Http\JsonResponse
     {
         DB::beginTransaction();
 
@@ -107,6 +112,61 @@ class ProductController extends Controller
     }
 
     /**
+     * Get product by id
+     *
+     * @param $id : product id
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show($id)
+    {
+        $product = Product::query()->whereId($id)->first();
+        if (!$product) {
+            return responseCustom([], 404, 'Product not found');
+        }
+        $data = [
+            'id' => $product->id,
+            'product_name' => $product->product_name,
+            'sku' => $product->sku,
+            'brand_id' => $product->brand_id,
+            'description' => $product->description,
+            'short_description' => $product->short_description,
+            'product_weight' => $product->product_weight,
+            'is_published' => $product->is_published,
+            'is_featured' => $product->is_featured,
+            'options' => $product->options->transform(function ($option) {
+                return [
+                    'id' => $option->id,
+                    'option_name' => $option->option_name,
+                    'option_values' => $option->values->transform(function ($value) {
+                        return [
+                            'id' => $value->id,
+                            'value' => $value->value_name,
+                        ];
+                    }),
+                ];
+            }),
+            'skus' => $product->skus->transform(function ($sku) {
+                return [
+                    'id' => $sku->id,
+                    'sku' => $sku->sku,
+                    'price' => $sku->price,
+                    'quantity' => $sku->quantity,
+                    'values' => $sku->values->transform(function ($value) {
+                        return [
+                            'option_id' => $value->option->id,
+                            'option_name' => $value->option->option_name,
+                            'value_id' => $value->value->id,
+                            'value' => $value->value->value_name,
+                        ];
+                    }),
+                ];
+            }),
+        ];
+        return responseCustom($data, 200, 'Get product success');
+    }
+
+    /**
      * Update product
      *
      * @param ProductRequest $request : id,product_name,sku,brand_id,description,short_description,product_weight,is_published,is_featured,options,skus
@@ -117,7 +177,7 @@ class ProductController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function update(ProductRequest $request)
+    public function update(ProductRequest $request): \Illuminate\Http\JsonResponse
     {
         DB::beginTransaction();
 
@@ -153,22 +213,22 @@ class ProductController extends Controller
     /**
      * Delete product
      *
-     * @param \Illuminate\Http\Request $request
+     * @param $id : product id
      *
      * @return \Illuminate\Http\JsonResponse
      *
      * @throws \Exception
      */
-    public function destroy(Request $request)
+    public function destroy($id): \Illuminate\Http\JsonResponse
     {
         DB::beginTransaction();
 
         try {
-            OptionValue::query()->whereProductId($request->id)->delete();
-            Option::query()->whereProductId($request->id)->delete();
-            SkuValue::query()->whereProductId($request->id)->delete();
-            ProductSku::query()->whereProductId($request->id)->delete();
-            Product::query()->whereId($request->id)->delete();
+            OptionValue::query()->whereProductId($id)->delete();
+            Option::query()->whereProductId($id)->delete();
+            SkuValue::query()->whereProductId($id)->delete();
+            ProductSku::query()->whereProductId($id)->delete();
+            Product::query()->whereId($id)->delete();
             DB::commit();
             return responseCustom([], 200, 'Delete product success');
         } catch (\Exception $e) {
@@ -176,6 +236,62 @@ class ProductController extends Controller
             \Log::error($e->getMessage());
             return responseCustom([], 500, 'Delete product failed');
         }
+    }
+
+    /**
+     * Change status product
+     *
+     * @param $id : product id
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function changeStatus($id)
+    {
+        try {
+            $product = Product::query()->whereId($id)->first();
+            if (!$product) {
+                return responseCustom([], 404, 'Product not found');
+            }
+            $product->is_published = !$product->is_published;
+            $product->save();
+            return responseCustom([], 200, 'Change status success');
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+            return responseCustom([], 500, 'Change status failed');
+        }
+    }
+
+    /**
+     * Search product
+     *
+     * @param \Illuminate\Http\Request $request : q
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function search(Request $request)
+    {
+        $products = Product::query()
+            ->search($request->input('q'))
+            ->paginate(10);
+        $data=$products->getCollection()
+            ->transform(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'product_name' => $product->product_name,
+                    'sku' => $product->sku,
+                    'brand_name' => $product->brand->name,
+                    'description' => $product->description,
+                    'short_description' => $product->short_description,
+                    'product_weight' => $product->product_weight,
+                    'is_published' => $product->is_published,
+                    'is_featured' => $product->is_featured,
+                    'total_quantity' => $product->skus->count(),
+                    'price' => $product->skus->min('price') !== $product->skus->max('price') ?
+                        $product->skus->min('price') . ' - ' . $product->skus->max('price') :
+                        $product->skus->min('price'),
+                ];
+            });
+        return responsePaginate($products,$data, 200, 'Search product success');
     }
 
     /**
@@ -330,4 +446,5 @@ class ProductController extends Controller
         // Delete any SKUs that were not in the update.
         ProductSku::whereIn('id', $existingSkuIds)->delete();
     }
+
 }

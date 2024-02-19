@@ -25,4 +25,19 @@ class ProductCategory extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function scopeWhereProductId($query, $productId)
+    {
+        return $query->where('product_id', $productId);
+    }
+
+    public function scopeWhereCategoryId($query, $categoryId)
+    {
+        return $query->where('category_id', $categoryId);
+    }
+
+    public function scopeDeleteCategory($query, $productId, $arrayCategoryId)
+    {
+        return $query->where('product_id', $productId)->whereIn('category_id', $arrayCategoryId)->delete();
+    }
 }

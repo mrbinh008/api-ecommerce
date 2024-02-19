@@ -74,5 +74,13 @@ class Product extends Model
         return $this->hasMany(SkuValue::class);
     }
 
+    public function scopeWhereBrandId($query, $brandId)
+    {
+        return $query->where('brand_id', $brandId);
+    }
 
+    public function scopeSearch($query, $keyword)
+    {
+        return $query->where('product_name', 'like', '%' . $keyword . '%');
+    }
 }
