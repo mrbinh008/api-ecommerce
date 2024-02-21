@@ -1,9 +1,11 @@
 <?php
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\CustomerController;
+
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\ProductCategoryController;
+use App\Http\Controllers\Admin\ProductController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\BrandController;
 
 Route::prefix('customer')->group(function () {
     Route::get('/', [CustomerController::class, 'index']);
@@ -35,8 +37,13 @@ Route::prefix('product')->group(function () {
         Route::put('/', [ProductCategoryController::class, 'update']);
     });
 
-
-    Route::post('/image', [ProductCategoryController::class, 'storeImage']);
 });
 
+Route::prefix('brand')->group(function () {
+    Route::get('/', [BrandController::class, 'index']);
+    Route::get('/{id}', [BrandController::class, 'show']);
+    Route::post('/', [BrandController::class, 'store']);
+    Route::put('/', [BrandController::class, 'update']);
+    Route::delete('/{id}', [BrandController::class, 'delete']);
+});
 

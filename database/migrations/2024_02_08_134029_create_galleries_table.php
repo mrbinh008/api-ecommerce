@@ -13,9 +13,8 @@ return new class extends Migration
     {
         Schema::create('galleries', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('product_id');
-            $table->string('image');
-            $table->boolean('is_thumbnail')->default(false);
+            $table->string('name');
+            $table->string('path');
             $table->timestamps();
         });
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\GalleryController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -39,6 +40,11 @@ Route::prefix('user')->middleware(['auth:api'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
+Route::prefix('media')->group(function () {
+    Route::post('/', [GalleryController::class, 'store']);
+    Route::delete('/{id}', [GalleryController::class, 'destroy']);
+    Route::put('/{id}', [GalleryController::class, 'update']);
+});
 //Route::post('/test', [AuthController::class, 'test']);
 
 

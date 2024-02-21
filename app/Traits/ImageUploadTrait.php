@@ -13,17 +13,23 @@ trait ImageUploadTrait {
             $file = $request->file($inputName);
             $extension = $file->getClientOriginalExtension();
             $fileName = 'media_'.uniqid().'.'.$extension;
-            \Storage::putFileAs($path, $file, $fileName);
-//            $file->storeAs($path, $fileName);
-            return $path.'/'.$fileName;
+            $file->storeAs($path, $fileName, 'public');
+            $uploadedImagePath = 'storage/'.$path.'/'.$fileName;
+
+            // Convert the uploaded image to webp
+            $webpImagePath = 'storage/'.$path.'/'.pathinfo($fileName, PATHINFO_FILENAME).'.webp';
+            $this->encodeToWebp($uploadedImagePath, $webpImagePath);
+
+            return [
+                'name' => $fileName,
+                'path' => $webpImagePath,
+            ];
         }
     }
 
-
     public function uploadMultiImage(Request $request, $inputName, $path)
     {
-        $imagePaths = [];
-
+        $imageData = [];
         if($request->hasFile($inputName)){
 
             $images = $request->{$inputName};
@@ -33,13 +39,20 @@ trait ImageUploadTrait {
                 $ext = $image->getClientOriginalExtension();
                 $imageName = 'media_'.uniqid().'.'.$ext;
 
-                $image->storeAs($path, $imageName);
+                $image->storeAs($path, $imageName, 'public');
+                $uploadedImagePath = 'storage/'.$path.'/'.$imageName;
 
-                $imagePaths[] =  $path.'/'.$imageName;
+                // Convert the uploaded image to webp
+                $webpImagePath = 'storage/'.$path.'/'.pathinfo($imageName, PATHINFO_FILENAME).'.webp';
+                $this->encodeToWebp($uploadedImagePath, $webpImagePath);
+
+                $imageData[] =  [
+                    'name' => $imageName,
+                    'path' => $webpImagePath,
+                ];
             }
-
-            return $imagePaths;
-       }
+            return $imageData;
+        }
     }
 
 
@@ -63,8 +76,41 @@ trait ImageUploadTrait {
     /** Handle Delte File */
     public function deleteImage(string $path)
     {
-        if(File::exists(storage_path($path))){
-            File::delete(storage_path($path));
+        if(File::exists($path)){
+            File::delete($path);
+        }
+    }
+    /**
+     * Encode image to webp
+     *
+     * @param $sourceImage
+     * @param $outputImage
+     * @param int $quality
+     * @throws Exception
+     */
+    private function encodeToWebp($sourceImage, $outputImage, $quality = 80) {
+        $extension = pathinfo($sourceImage, PATHINFO_EXTENSION);
+        switch(strtolower($extension)) {
+            case 'jpeg':
+            case 'jpg':
+                $image = imagecreatefromjpeg($sourceImage);
+                break;
+            case 'png':
+                $image = imagecreatefrompng($sourceImage);
+                break;
+            case 'gif':
+                $image = imagecreatefromgif($sourceImage);
+                break;
+            case 'bmp':
+                $image = imagecreatefrombmp($sourceImage);
+                break;
+            default:
+                throw new Exception('Unsupported image format');
+        }
+        imagewebp($image, $outputImage, $quality);
+        imagedestroy($image);
+        if (file_exists($sourceImage)) {
+            unlink($sourceImage);
         }
     }
 }

@@ -5,17 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductSku extends Model
+class ProductGallery extends Model
 {
     use HasFactory;
 
-    public $table = 'product_skus';
+    public $table = 'product_galleries';
 
     protected $fillable = [
         'product_id',
-        'sku',
-        'price',
-        'quantity',
+        'product_sku_id',
+        'gallery_id',
     ];
 
     public function product()
@@ -23,18 +22,23 @@ class ProductSku extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function values()
+    public function gallery()
     {
-        return $this->hasMany(SkuValue::class,  'sku_id');
+        return $this->belongsTo(Gallery::class);
     }
 
-    public function images()
+    public function productSku()
     {
-        return $this->hasMany(ProductGallery::class);
+        return $this->belongsTo(ProductSku::class);
     }
 
     public function scopeWhereProductId($query, $productId)
     {
         return $query->where('product_id', $productId);
+    }
+
+    public function scopeWhereProductSkuId($query, $productSkuId)
+    {
+        return $query->where('product_sku_id', $productSkuId);
     }
 }

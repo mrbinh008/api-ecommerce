@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
+use App\Models\ProductGallery;
 use App\Traits\ImageUploadTrait;
+use http\Env;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ProductSku;
@@ -40,34 +42,6 @@ class ProductController extends Controller
                 'is_featured' => $product->is_featured,
                 'total_quantity' => $product->skus->count(),
                 'price' => $product->skus->min('price') !== $product->skus->max('price') ? $product->skus->min('price') . ' - ' . $product->skus->max('price') : $product->skus->min('price'),
-//                'options' => $product->options->transform(function ($option) {
-//                    return [
-//                        'id' => $option->id,
-//                        'option_name' => $option->option_name,
-//                        'option_values' => $option->values->transform(function ($value) {
-//                            return [
-//                                'id' => $value->id,
-//                                'value' => $value->value_name,
-//                            ];
-//                        }),
-//                    ];
-//                }),
-//                'skus' => $product->skus->transform(function ($sku) {
-//                    return [
-//                        'id' => $sku->id,
-//                        'sku' => $sku->sku,
-//                        'price' => $sku->price,
-//                        'quantity' => $sku->quantity,
-//                        'values' => $sku->values->transform(function ($value) {
-//                            return [
-//                                'option_id' => $value->option->id,
-//                                'option_name' => $value->option->option_name,
-//                                'value_id' => $value->value->id,
-//                                'value' => $value->value->value_name,
-//                            ];
-//                        }),
-//                    ];
-//                }),
             ];
         });
         return responsePaginate($products, $data, 200, 'Get list product success');
@@ -134,6 +108,11 @@ class ProductController extends Controller
             'product_weight' => $product->product_weight,
             'is_published' => $product->is_published,
             'is_featured' => $product->is_featured,
+            'images' => $product->images->transform(function ($image) {
+                return [
+                    'path' => \Illuminate\Support\Env::get('APP_URL') . '/storage/' . $image->image,
+                ];
+            }),
             'options' => $product->options->transform(function ($option) {
                 return [
                     'id' => $option->id,
@@ -162,6 +141,7 @@ class ProductController extends Controller
                     }),
                 ];
             }),
+            'category' => $product->categories->pluck('id'),
         ];
         return responseCustom($data, 200, 'Get product success');
     }
@@ -273,7 +253,7 @@ class ProductController extends Controller
         $products = Product::query()
             ->search($request->input('q'))
             ->paginate(10);
-        $data=$products->getCollection()
+        $data = $products->getCollection()
             ->transform(function ($product) {
                 return [
                     'id' => $product->id,
@@ -291,7 +271,7 @@ class ProductController extends Controller
                         $product->skus->min('price'),
                 ];
             });
-        return responsePaginate($products,$data, 200, 'Search product success');
+        return responsePaginate($products, $data, 200, 'Search product success');
     }
 
     /**
@@ -447,4 +427,49 @@ class ProductController extends Controller
         ProductSku::whereIn('id', $existingSkuIds)->delete();
     }
 
+    private function uploadImageProduct($product, $image)
+    {
+        try {
+            ProductGallery::query()->create([
+                'product_id' => $product->id,
+                'gallery_id' => $image
+            ]);
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+        }
+    }
+
+    private function updateImageProduct($product, $image)
+    {
+        try {
+            ProductGallery::query()->whereProdutId($product->id)->update(['gallery_id' => $image]);
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+        }
+    }
+
+    private function uploadImageSku($product, $sku, $image)
+    {
+        try {
+            ProductGallery::query()->create([
+                'product_id' => $product->id,
+                'product_sku_id' => $sku->id,
+                'gallery_id' => $image,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+        }
+    }
+
+    private function updateImageSku($product, $sku, $image)
+    {
+        try {
+            ProductGallery::query()
+                ->whereProductId($product->id)
+                ->whereProductSkuId($sku->id)
+                ->update(['gallery_id' => $image]);
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+        }
+    }
 }

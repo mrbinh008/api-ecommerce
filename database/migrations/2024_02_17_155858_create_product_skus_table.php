@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('product_skus', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('product_id');
-            $table->string('sku');
+            $table->unsignedBigInteger('product_id')->index();
+            $table->string('sku')->unique();
             $table->integer('price');
             $table->integer('quantity');
             $table->timestamps();
