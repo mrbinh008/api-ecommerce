@@ -59,6 +59,10 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->notify(new ResetPasswordNotification($url));
     }
 
+    public function getAvatarAttribute($value)
+    {
+        return env('APP_URL') . '/' . $value;
+    }
     /**
      * Get list customer
      *

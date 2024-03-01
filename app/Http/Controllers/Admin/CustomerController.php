@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
 use App\Traits\ImageUploadTrait;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -17,8 +18,8 @@ class CustomerController extends Controller
     {
         if ($request->has('id')) {
             $user = User::find($request->id);
-            if (!$user) return responseCustom(null, 200, 'User not found');
-            return responseCustom($user, 200, 'Get user success');
+            if (!$user) return responseCustom(null, 200, 'Customer not found');
+            return responseCustom($user, 200, 'Get customer success');
         }
         $user = User::getListCustomer($request->limit ?? 10);
 
@@ -28,12 +29,12 @@ class CustomerController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'avatar' => $user->avatar,
-                'role' => $user->getRoleNames(),
-                'status' => $user->is_active,
-                'created_at' => $user->created_at,
+                'role' => $user->getRoleNames()[0],
+                'is_active' => $user->is_active,
+                'created_at' => Carbon::make($user->created_at)->format('d-m-Y'),
             ];
         });
-        return responsePaginate($user, $data, 200, 'Get list user success');
+        return responsePaginate($user, $data, 200, 'Get list customer success');
     }
 
     public function store(UserRequest $request)
@@ -41,7 +42,7 @@ class CustomerController extends Controller
         $avatar = null;
         try {
             if ($request->hasFile('avatar')) {
-                $avatar = $this->uploadImage($request, 'avatar', 'uploads/avatars');
+                $avatar = $this->uploadImage($request, 'avatar', 'uploads/avatars')['path'];
             }
             $user = new User();
             $user->name = $request->name;
@@ -118,7 +119,7 @@ class CustomerController extends Controller
             $user->save();
             return responseCustom($user, 200, 'Change status success');
         } else {
-            return responseCustom([], 404, 'User not found');
+            return responseCustom([], 400, 'User not found');
         }
     }
 

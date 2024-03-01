@@ -32,7 +32,6 @@ class CategoryRequest extends FormRequest
                 ];
             case 'PUT':
                 return [
-                    'id' => 'required|exists:categories,id',
                     'parent_id' => 'nullable|exists:categories,id',
                     'category_name' => 'required|unique:categories,category_name,' . $this->id . ',id',
                     'category_description' => 'required',
@@ -47,14 +46,12 @@ class CategoryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'parent_id.exists' => 'Parent category not found',
-            'category_name.required' => 'Category name is required',
-            'category_name.unique' => 'Category name already exists',
-            'category_description.required' => 'Category description is required',
-            'active.required' => 'Active is required',
-            'active.boolean' => 'Active must be boolean',
-            'id.required' => 'Id is required',
-            'id.exists' => 'Id not found',
+            'parent_id.exists' => 'Thể loại cha không tồn tại',
+            'category_name.required' => 'Thể loại không được để trống',
+            'category_name.unique' => 'Thể loại đã tồn tại',
+            'category_description.required' => 'Mô tả thể loại không được để trống',
+            'active.required' => 'Trạng thái không được để trống',
+            'active.boolean' => 'Trạng thái phải là boolean',
         ];
     }
 }

@@ -18,10 +18,12 @@ Route::prefix('customer')->group(function () {
 
 Route::prefix('category')->group(function () {
     Route::get('/', [CategoryController::class, 'index']);
+    Route::get('/all', [CategoryController::class, 'getAll']);
     Route::get('/children/{parentId}', [CategoryController::class, 'getChildren']);
     Route::post('/', [CategoryController::class, 'store']);
-    Route::put('/', [CategoryController::class, 'update']);
-    Route::delete('/', [CategoryController::class, 'destroy']);
+    Route::put('/{id}', [CategoryController::class, 'update']);
+    Route::delete('/{id}', [CategoryController::class, 'destroy']);
+    Route::patch('/change-status/{id}', [CategoryController::class, 'changeStatus']);
 });
 
 Route::prefix('product')->group(function () {
@@ -43,7 +45,10 @@ Route::prefix('brand')->group(function () {
     Route::get('/', [BrandController::class, 'index']);
     Route::get('/{id}', [BrandController::class, 'show']);
     Route::post('/', [BrandController::class, 'store']);
-    Route::put('/', [BrandController::class, 'update']);
+    Route::put('/{id}', [BrandController::class, 'update']);
     Route::delete('/{id}', [BrandController::class, 'delete']);
+    Route::get('/search', [BrandController::class, 'search']);
+    Route::patch('/change-status/{id}', [BrandController::class, 'changeStatus']);
+    Route::patch('/change-featured/{id}', [BrandController::class, 'changeFeatured']);
 });
 

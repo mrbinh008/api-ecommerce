@@ -9,6 +9,7 @@ use App\Mail\MTest;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rules;
@@ -75,7 +76,7 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'phone_number'=>$user->phone_number,
-            'avatar'=>$user->avatar,
+            'avatar'=>Env::get('APP_URL').'/'.$user->avatar,
             'is_active'=>$user->is_active,
             'role'=>$user->getRoleNames()->first(),
         ];

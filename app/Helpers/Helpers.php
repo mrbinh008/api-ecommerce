@@ -22,13 +22,13 @@ if (!function_exists('responsePaginate')) {
             'data' => $data,
             'meta' => [
                 'current_page' => $paginate->currentPage(),
-                'last_page' => $paginate->lastPage(),
+                'total_page' => $paginate->lastPage(),
                 'from' => $paginate->firstItem(),
                 'to' => $paginate->lastItem(),
+                'total_items' => $paginate->total(),
                 'nextPage' => $paginate->nextPageUrl(),
                 'prevPage' => $paginate->previousPageUrl(),
                 'per_page' => $paginate->perPage(),
-                'total_page' => $paginate->total(),
             ],
             'message' => $message,
             'error' => $error

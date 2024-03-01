@@ -13,17 +13,21 @@ class UserSeed extends Seeder
      */
     public function run(): void
     {
-        $user=User::create([
-            'name' => 'Test User',
-            'email' => 'user@gmail.com',
-            'password' => \Hash::make('12345678'),
-        ]);
-        $user->assignRole('user');
-        $admin=User::create([
-            'name' => 'Test Admin',
-            'email' => 'admin@gmail.com',
-            'password' => \Hash::make('12345678'),
-        ]);
-        $admin->assignRole('admin');
+//        $user=User::create([
+//            'name' => 'Test User',
+//            'email' => 'user@gmail.com',
+//            'password' => \Hash::make('12345678'),
+//        ]);
+//        $user->assignRole('user');
+//        $admin=User::create([
+//            'name' => 'Test Admin',
+//            'email' => 'admin@gmail.com',
+//            'password' => \Hash::make('12345678'),
+//        ]);
+//        $admin->assignRole('admin');
+
+        $customer=User::factory()->count(100)->create()->each(function ($user) {
+            $user->assignRole('user');
+        });
     }
 }

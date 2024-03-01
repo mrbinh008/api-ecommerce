@@ -6,6 +6,7 @@ use App\Http\Requests\UserRequest;
 use App\Models\User;
 use App\Traits\ImageUploadTrait;
 use Illuminate\Http\Response;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
@@ -18,6 +19,7 @@ class UserController extends Controller
 //            return User::find(auth()->user()->id);
 //        });
         $user = User::find(auth()->user()->id);
+        $user->avatar = Env::get('APP_URL') . '/' . $user->avatar;
         if (!$user) return responseCustom(null, Response::HTTP_OK, 'User not found');
         return responseCustom($user, Response::HTTP_OK, 'Get user success');
     }
@@ -25,12 +27,12 @@ class UserController extends Controller
 
     public function update(UserRequest $request)
     {
-        $user = User::find(auth()->user()->id);
+        $user = User::find(auth()->guard('api')->user()->id);
         if ($user) {
             try {
                 $avatar = $user->avatar;
                 if ($request->hasFile('avatar')) {
-                    $avatar = $this->updateImage($request, 'avatar', 'uploads/avatars', $user->avatar);
+                    $avatar = $this->updateImage($request, 'avatar', 'uploads/avatars', $user->avatar)['path'];
                 }
                 $user->name = $request->name;
                 $user->email = $request->email;
@@ -38,6 +40,7 @@ class UserController extends Controller
                 $user->is_active = $request->is_active;
                 $user->syncRoles([$request->role]);
                 $user->save();
+                $user->avatar = Env::get('APP_URL') . '/' . $user->avatar;
                 return responseCustom($user, Response::HTTP_OK, 'Update user success');
             } catch (\Exception $e) {
                 Log::error($e->getMessage());

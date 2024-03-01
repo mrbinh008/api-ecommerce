@@ -22,13 +22,13 @@ class BrandController extends Controller
     public function store(BrandRequest $request)
     {
         if ($request->hasFile('logo')) {
-            $logo = $this->uploadImage($request, 'logo', 'logo');
+            $logo = $this->uploadImage($request->file('logo'), 'logo')['path'];
         }
         try {
             $brand = Brand::create([
                 'name' => $request->name,
                 'slug' => \Str::slug($request->name, '-'),
-                'logo' => $logo['path'] ?? null,
+                'logo' => $logo ?? null,
                 'description' => $request->description,
                 'is_active' => $request->is_active,
                 'featured' => $request->featured,
@@ -49,15 +49,17 @@ class BrandController extends Controller
         return responseCustom($brand, 200, 'Get brand success');
     }
 
-    public function update(BrandRequest $request)
+    public function update(BrandRequest $request,int $id) : \Illuminate\Http\JsonResponse
     {
         try {
-            $brand = Brand::query()->whereId($request->id);
+            $brand = Brand::query()->whereId($id);
+            if (!$brand->first()) {
+                return responseCustom([], 404, 'Brand not found');
+            }
             $logo = $brand->first()->logo;
-            if ($request->hasFile('logo')) {
+            if ($request->hasFile('logo')&& $request->logo !== null) {
                 $this->deleteImage($logo);
-                $logo = $this->uploadImage($request, 'logo', 'logo');
-                $logo = $logo['path'];
+                $logo = $this->uploadImage($request->file('logo'), 'logo')['path'];
             }
             $brand->update([
                 'name' => $request->name,
@@ -67,7 +69,7 @@ class BrandController extends Controller
                 'is_active' => $request->is_active,
                 'featured' => $request->featured,
             ]);
-            return responseCustom($brand, 200, 'Update brand success');
+            return responseCustom($brand->first(), 200, 'Update brand success');
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return responseCustom([], 500, 'Update brand failed');
@@ -78,6 +80,9 @@ class BrandController extends Controller
     {
         try {
             $brand = Brand::query()->find($id);
+            if ($brand->products->isNotEmpty()) {
+                return responseCustom([], 400,  'Brand has product');
+            }
             if (!$brand) {
                 return responseCustom([], 404, 'Brand not found');
             }
@@ -91,4 +96,44 @@ class BrandController extends Controller
             return responseCustom([], 500, 'Delete brand failed');
         }
     }
+
+    public function search(Request $request)
+    {
+        $brand = Brand::query()->search($request->keyword)->paginate(10);
+        return responsePaginate($brand, $brand->items(), 200, 'Get data success');
+    }
+
+    public function changeStatus($id)
+    {
+        try {
+            $brand = Brand::query()->find($id);
+            if (!$brand) {
+                return responseCustom([], 404, 'Brand not found');
+            }
+            $brand->is_active = !$brand->is_active;
+            $brand->save();
+            return responseCustom($brand, 200, 'Change status brand success');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return responseCustom([], 500, 'Change status brand failed');
+        }
+    }
+
+    public function changeFeatured($id)
+    {
+        try {
+            $brand = Brand::query()->find($id);
+            if (!$brand) {
+                return responseCustom([], 404, 'Brand not found');
+            }
+            $brand->featured = !$brand->featured;
+            $brand->save();
+            return responseCustom($brand, 200, 'Change status feature brand success');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return responseCustom([], 500, 'Change status feature brand failed');
+        }
+    }
+
+
 }
