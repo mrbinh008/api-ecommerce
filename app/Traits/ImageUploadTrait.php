@@ -8,16 +8,16 @@ use File;
 trait ImageUploadTrait
 {
 
-    public function uploadImage(mixed $file, string $path="upload") :array
+    public function uploadImage(mixed $file, string $path = "upload"): array
     {
         $extension = $file->getClientOriginalExtension();
-        $fileName = 'media_' . uniqid() . '.' . $extension;
+        $fileName = 'media_' . uniqid();
         $file->storeAs($path, $fileName, 'public');
         $uploadedImagePath = 'storage/' . $path . '/' . $fileName;
 
         if (in_array($extension, ['svg', 'webp'])) {
             return [
-                'name' => $fileName,
+                'name' => $fileName . '.' . $extension,
                 'path' => $uploadedImagePath,
             ];
         }
@@ -25,66 +25,88 @@ trait ImageUploadTrait
         $this->encodeToWebp($uploadedImagePath, $webpImagePath);
 
         return [
-            'name' => $fileName,
+            'name' => $fileName . '.webp',
             'path' => $webpImagePath,
         ];
     }
 
-    public function uploadMultiImage(Request $request, $inputName, $path)
+    public function uploadMultiImage(mixed $file, string $path = "upload"): array
     {
         $imageData = [];
-        if ($request->hasFile($inputName)) {
-
-            $images = $request->{$inputName};
-
-            foreach ($images as $image) {
-
-                $ext = $image->getClientOriginalExtension();
-                $imageName = 'media_' . uniqid() . '.' . $ext;
-
-                $image->storeAs($path, $imageName, 'public');
-                $uploadedImagePath = 'storage/' . $path . '/' . $imageName;
-
-                // Convert the uploaded image to webp
-                $webpImagePath = 'storage/' . $path . '/' . pathinfo($imageName, PATHINFO_FILENAME) . '.webp';
-                $this->encodeToWebp($uploadedImagePath, $webpImagePath);
-
+        foreach ($file as $image) {
+            $ext = $image->getClientOriginalExtension();
+            $imageName = 'media_' . uniqid();
+            $image->storeAs($path, $imageName, 'public');
+            $uploadedImagePath = 'storage/' . $path . '/' . $imageName;
+            // Convert the uploaded image to webp
+            $webpImagePath = 'storage/' . $path . '/' . pathinfo($imageName, PATHINFO_FILENAME) . '.webp';
+            $this->encodeToWebp($uploadedImagePath, $webpImagePath);
+            if (in_array($ext, ['svg', 'webp'])) {
                 $imageData[] = [
-                    'name' => $imageName,
-                    'path' => $webpImagePath,
+                    'name' => $imageName . '.' . $ext,
+                    'path' => $uploadedImagePath,
                 ];
             }
-            return $imageData;
+            $imageData[] = [
+                'name' => $imageName . '.webp',
+                'path' => $webpImagePath,
+            ];
         }
+        return $imageData;
+    }
+
+
+    // Controller method to handle file upload
+    public function uploadFileBase64(mixed $files, string $path = "upload"): array
+    {
+        $dataImage = [];
+        foreach ($files as $file) {
+            $image_64 = $file['thumbUrl'];
+            $extension = explode('/', explode(':', substr($image_64, 0, strpos($image_64, ';')))[1])[1];
+            $replace = substr($image_64, 0, strpos($image_64, ',') + 1);
+
+            $image = str_replace($replace, '', $image_64);
+
+            $image = str_replace(' ', '+', $image);
+
+            $imageName = 'media_'.uniqid() . '.' . $extension;
+            $filePath =  $path . '/' . $imageName;
+            \Storage::disk('public')->put($filePath, base64_decode($image));
+            $dataImage[] = [
+                'name' => $imageName,
+                'path' => 'storage/' .$filePath,
+            ];
+        }
+        return $dataImage;
     }
 
     /**
      * @param mixed $file
-     * @param string $path: default is 'upload'
+     * @param string $path : default is 'upload'
      * @param string|null $oldPath
      * @return array[]
      */
-    public function updateImage(mixed $file, string $path='upload', string $oldPath = null): array
+    public function updateImage(mixed $file, string $path = 'upload', string $oldPath = null): array
     {
-            if (File::exists($oldPath)) {
-                File::delete($oldPath);
-            }
-            $ext = $file->getClientOriginalExtension();
-            $fileName = 'media_' . uniqid() . '.' . $ext;
-            $file->storeAs($path, $fileName, 'public');
-            $uploadedImagePath = 'storage/' . $path . '/' . $fileName;
-            if (in_array($ext, ['svg', 'webp'])) {
-                return [
-                    'name' => $fileName,
-                    'path' => $uploadedImagePath,
-                ];
-            }
-            $webpImagePath = 'storage/' . $path . '/' . pathinfo($fileName, PATHINFO_FILENAME) . '.webp';
-            $this->encodeToWebp($uploadedImagePath, $webpImagePath);
+        if (File::exists($oldPath)) {
+            File::delete($oldPath);
+        }
+        $ext = $file->getClientOriginalExtension();
+        $fileName = 'media_' . uniqid() . '.' . $ext;
+        $file->storeAs($path, $fileName, 'public');
+        $uploadedImagePath = 'storage/' . $path . '/' . $fileName;
+        if (in_array($ext, ['svg', 'webp'])) {
             return [
                 'name' => $fileName,
-                'path' => $webpImagePath,
+                'path' => $uploadedImagePath,
             ];
+        }
+        $webpImagePath = 'storage/' . $path . '/' . pathinfo($fileName, PATHINFO_FILENAME) . '.webp';
+        $this->encodeToWebp($uploadedImagePath, $webpImagePath);
+        return [
+            'name' => $fileName,
+            'path' => $webpImagePath,
+        ];
     }
 
     /** Handle Delte File */

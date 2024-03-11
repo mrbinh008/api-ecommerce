@@ -34,11 +34,13 @@ class ProductRequest extends FormRequest
                     'product_weight' => 'nullable|numeric',
                     'is_published' => 'nullable|boolean',
                     'is_featured' => 'nullable|boolean',
-                    'options' => 'nullable|array',
+//                    'options' => 'nullable|array',
+                    'options.*.id' => 'required|string|max:255',
                     'options.*.option_name' => 'required|string|max:255',
                     'options.*.option_values' => 'required|array',
+                    'options.*.option_values.*.id' => 'required|string|max:255',
                     'options.*.option_values.*.value' => 'required|string|max:255',
-                    'skus' => 'nullable|array',
+//                    'skus' => 'nullable|array',
                     'skus.*.sku' => [
                         'required',
                         'string',
@@ -48,8 +50,8 @@ class ProductRequest extends FormRequest
                     'skus.*.price' => 'required|numeric',
                     'skus.*.quantity' => 'required|integer',
                     'skus.*.values' => 'required|array',
-                    'skus.*.values.*.value_id' => 'required|integer|max:255',
-                    'skus.*.values.*.option_id' => 'required|integer|max:255',
+                    'skus.*.values.*.value_id' => 'required|string|max:255',
+                    'skus.*.values.*.option_id' => 'required|string|max:255',
                 ];
             case 'PUT':
                 return [
@@ -62,8 +64,10 @@ class ProductRequest extends FormRequest
                     'is_featured' => 'nullable|boolean',
                     'sku' => 'string|max:255|unique:products,sku,'.$this->id,
                     'options' => 'nullable|array',
+                    'options.*.id' => 'required|string|max:255',
                     'options.*.option_name' => 'required|string|max:255',
                     'options.*.option_values' => 'required|array',
+                    'options.*.option_values.*.id' => 'required|string|max:255',
                     'options.*.option_values.*.value' => 'required|string|max:255',
                     'skus' => 'nullable|array',
                     'skus.*.sku' => [
@@ -82,8 +86,8 @@ class ProductRequest extends FormRequest
                     'skus.*.price' => 'required|numeric',
                     'skus.*.quantity' => 'required|integer',
                     'skus.*.values' => 'required|array',
-                    'skus.*.values.*.value_id' => 'required|integer|max:255',
-                    'skus.*.values.*.option_id' => 'required|integer|max:255',
+                    'skus.*.values.*.value_id' => 'required|string|max:255',
+                    'skus.*.values.*.option_id' => 'required|string|max:255',
                 ];
             default:
                 return [];

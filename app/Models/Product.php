@@ -31,7 +31,7 @@ class Product extends Model
 
     public function images()
     {
-        return $this->hasMany(ProductGallery::class);
+        return $this->hasMany(Gallery::class)->where('product_sku_id', '=', null);
     }
 
     public function brand()
@@ -59,10 +59,6 @@ class Product extends Model
         return $this->hasMany(Option::class);
     }
 
-//    public function options()
-//    {
-//        return $this->hasManyThrough(Option::class, ProductSku::class);
-//    }
 
     public function optionValues()
     {

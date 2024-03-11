@@ -19,6 +19,12 @@ class BrandController extends Controller
         return responsePaginate($brand, $brand->items(), 200, 'Get data success');
     }
 
+    public function getAll()
+    {
+        $brand = Brand::query()->select('id', 'name')->get();
+        return responseCustom($brand, 200, 'Get data success');
+    }
+
     public function store(BrandRequest $request)
     {
         if ($request->hasFile('logo')) {

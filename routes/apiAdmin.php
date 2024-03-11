@@ -33,16 +33,18 @@ Route::prefix('product')->group(function () {
     Route::put('/', [ProductController::class, 'update']);
     Route::delete('/{id}', [ProductController::class, 'destroy']);
     Route::patch('/change-status/{id}', [ProductController::class, 'changeStatus']);
+    Route::patch('/change-featured/{id}', [ProductController::class, 'changeFeatured']);
     Route::get('/search', [ProductController::class, 'search']);
-    Route::prefix('category')->group(function () {
-        Route::post('/', [ProductCategoryController::class, 'store']);
-        Route::put('/', [ProductCategoryController::class, 'update']);
-    });
+//    Route::prefix('category')->group(function () {
+//        Route::post('/', [ProductCategoryController::class, 'store']);
+//        Route::put('/', [ProductCategoryController::class, 'update']);
+//    });
 
 });
 
 Route::prefix('brand')->group(function () {
     Route::get('/', [BrandController::class, 'index']);
+    Route::get('/all', [BrandController::class, 'getAll']);
     Route::get('/{id}', [BrandController::class, 'show']);
     Route::post('/', [BrandController::class, 'store']);
     Route::put('/{id}', [BrandController::class, 'update']);
