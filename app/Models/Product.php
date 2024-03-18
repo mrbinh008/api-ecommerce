@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
@@ -23,59 +26,59 @@ class Product extends Model
         'is_featured',
     ];
 
-    public function categories()
+    public function categories():BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'product_categories');
     }
 
 
-    public function images()
+    public function images():HasMany
     {
         return $this->hasMany(Gallery::class)->where('product_sku_id', '=', null);
     }
 
-    public function brand()
+    public function brand():BelongsTo
     {
         return $this->belongsTo(Brand::class);
     }
 
-    public function coupons()
+    public function coupons():BelongsToMany
     {
         return $this->belongsToMany(Coupon::class, 'product_coupons');
     }
 
-    public function tags()
+    public function tags():BelongsToMany
     {
         return $this->belongsToMany(Tag::class, 'product_tags');
     }
 
-    public function skus()
+    public function skus():HasMany
     {
         return $this->hasMany(ProductSku::class);
     }
 
-    public function options()
+    public function options():HasMany
     {
         return $this->hasMany(Option::class);
     }
 
 
-    public function optionValues()
+    public function optionValues():HasMany
     {
         return $this->hasMany(OptionValue::class);
     }
 
-    public function skuValues()
+    public function skuValues():HasMany
     {
         return $this->hasMany(SkuValue::class);
     }
 
-    public function scopeWhereBrandId($query, $brandId)
+    public function scopeWhereBrandId($query, $brandId): mixed
     {
         return $query->where('brand_id', $brandId);
     }
 
-    public function scopeSearch($query, $keyword)
+    public function scopeSearch($query, $keyword):mixed
     {
         return $query->where('product_name', 'like', '%' . $keyword . '%');
     }

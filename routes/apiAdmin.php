@@ -35,11 +35,7 @@ Route::prefix('product')->group(function () {
     Route::patch('/change-status/{id}', [ProductController::class, 'changeStatus']);
     Route::patch('/change-featured/{id}', [ProductController::class, 'changeFeatured']);
     Route::get('/search', [ProductController::class, 'search']);
-//    Route::prefix('category')->group(function () {
-//        Route::post('/', [ProductCategoryController::class, 'store']);
-//        Route::put('/', [ProductCategoryController::class, 'update']);
-//    });
-
+    Route::delete('/gallery/{id}', [\App\Http\Controllers\Admin\GalleryController::class, 'destroy']);
 });
 
 Route::prefix('brand')->group(function () {

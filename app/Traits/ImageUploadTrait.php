@@ -12,16 +12,15 @@ trait ImageUploadTrait
     {
         $extension = $file->getClientOriginalExtension();
         $fileName = 'media_' . uniqid();
-        $file->storeAs($path, $fileName, 'public');
-        $uploadedImagePath = 'storage/' . $path . '/' . $fileName;
-
+        $file->storeAs($path, $fileName.'.'. $extension, 'public');
+        $uploadedImagePath = 'storage/' . $path . '/' . $fileName.'.'. $extension;
         if (in_array($extension, ['svg', 'webp'])) {
             return [
-                'name' => $fileName . '.' . $extension,
+                'name' => $fileName.'.'. $extension,
                 'path' => $uploadedImagePath,
             ];
         }
-        $webpImagePath = 'storage/' . $path . '/' . pathinfo($fileName, PATHINFO_FILENAME) . '.webp';
+        $webpImagePath = 'storage/' . $path . '/' . pathinfo($fileName.'.'. $extension, PATHINFO_FILENAME) . '.webp';
         $this->encodeToWebp($uploadedImagePath, $webpImagePath);
 
         return [
@@ -36,17 +35,18 @@ trait ImageUploadTrait
         foreach ($file as $image) {
             $ext = $image->getClientOriginalExtension();
             $imageName = 'media_' . uniqid();
-            $image->storeAs($path, $imageName, 'public');
-            $uploadedImagePath = 'storage/' . $path . '/' . $imageName;
-            // Convert the uploaded image to webp
-            $webpImagePath = 'storage/' . $path . '/' . pathinfo($imageName, PATHINFO_FILENAME) . '.webp';
-            $this->encodeToWebp($uploadedImagePath, $webpImagePath);
+            $image->storeAs($path, $imageName. '.' . $ext, 'public');
+            $uploadedImagePath = 'storage/' . $path . '/' . $imageName. '.' . $ext;
             if (in_array($ext, ['svg', 'webp'])) {
                 $imageData[] = [
-                    'name' => $imageName . '.' . $ext,
+                    'name' => $imageName,
                     'path' => $uploadedImagePath,
                 ];
             }
+            // Convert the uploaded image to webp
+            $webpImagePath = 'storage/' . $path . '/' . pathinfo($imageName. '.' . $ext, PATHINFO_FILENAME) . '.webp';
+            $this->encodeToWebp($uploadedImagePath, $webpImagePath);
+
             $imageData[] = [
                 'name' => $imageName . '.webp',
                 'path' => $webpImagePath,
@@ -57,28 +57,73 @@ trait ImageUploadTrait
 
 
     // Controller method to handle file upload
-    public function uploadFileBase64(mixed $files, string $path = "upload"): array
+//    public function uploadFileBase64(mixed $files, string $path = "upload"): array
+//    {
+//        $dataImage = [];
+//        foreach ($files as $file) {
+//            $image_64 = $file['thumbUrl'];
+//            $extension = explode('/', explode(':', substr($image_64, 0, strpos($image_64, ';')))[1])[1];
+//            $replace = substr($image_64, 0, strpos($image_64, ',') + 1);
+//            $image = str_replace($replace, '', $image_64);
+//            $image = str_replace(' ', '+', $image);
+//            $imageName = 'media_'.uniqid() . '.' . $extension;
+//            $filePath =  $path . '/' . $imageName;
+//            \Storage::disk('public')->put($filePath, base64_decode($image));
+//            $dataImage[] = [
+//                'name' => $imageName,
+//                'path' => 'storage/' .$filePath,
+//            ];
+//        }
+//        return $dataImage;
+//    }
+
+    public function uploadFileBase64(array $files, string $path = "upload"): array
     {
-        $dataImage = [];
-        foreach ($files as $file) {
-            $image_64 = $file['thumbUrl'];
-            $extension = explode('/', explode(':', substr($image_64, 0, strpos($image_64, ';')))[1])[1];
-            $replace = substr($image_64, 0, strpos($image_64, ',') + 1);
+        $dataImages = [];
 
-            $image = str_replace($replace, '', $image_64);
+        foreach ($files as $fileData) {
+            $base64Image = $fileData;
+            $uniqueFilename = $this->generateUniqueFilename($fileData);
+            $filePath = $path . '/' . $uniqueFilename;
 
-            $image = str_replace(' ', '+', $image);
+            try {
+                // Save the image directly without resizing
+                $this->saveBase64Image($base64Image, $filePath);
 
-            $imageName = 'media_'.uniqid() . '.' . $extension;
-            $filePath =  $path . '/' . $imageName;
-            \Storage::disk('public')->put($filePath, base64_decode($image));
-            $dataImage[] = [
-                'name' => $imageName,
-                'path' => 'storage/' .$filePath,
-            ];
+                $dataImages[] = [
+                    'name' => $uniqueFilename,
+                    'path' => 'storage/' . $filePath,
+                ];
+            } catch (\Exception $e) {
+                // Handle error gracefully
+                // For example, log the error and continue with the next image
+                \Log::error('Error saving image: ' . $e->getMessage());
+            }
         }
-        return $dataImage;
+
+        return $dataImages;
     }
+
+    private function saveBase64Image(string $base64Image, string $filePath): void
+    {
+        $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+        $imageData = str_replace(' ', '+', $imageData);
+        \Storage::disk('public')->put($filePath, base64_decode($imageData));
+    }
+
+    private function generateUniqueFilename(string $base64Image): string
+    {
+        $extension = $this->getImageExtension($base64Image);
+        return 'media_' . uniqid() . '.' . $extension;
+    }
+
+    private function getImageExtension(string $base64Image): string
+    {
+        $mime = explode(';', $base64Image)[0];
+        $mime = explode(':', $mime)[1];
+        return explode('/', $mime)[1];
+    }
+
 
     /**
      * @param mixed $file

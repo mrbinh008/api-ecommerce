@@ -6,7 +6,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\Admin\GalleryController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
