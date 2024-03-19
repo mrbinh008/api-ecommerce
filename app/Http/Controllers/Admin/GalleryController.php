@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Gallery;
+use App\Models\ProductGallery;
 use App\Traits\ImageUploadTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,6 @@ class GalleryController extends Controller
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
                 $imageData = $this->uploadImage($image, 'gallery');
-                $gallery->product_id = 1;
                 $gallery->path = $imageData['path'];
                 $gallery->name = $imageData['name'];
             }
@@ -37,9 +37,11 @@ class GalleryController extends Controller
         try {
             $gallery = Gallery::find($id);
             if ($gallery) {
-                if (\File::exists($gallery->path)) {
-                    \File::delete($gallery->path);
+                $path = str_replace(config('app.url') . '/', '', $gallery->path);
+                if (\File::exists($path)) {
+                    \File::delete($path);
                 }
+                ProductGallery::query()->deleteGallery($id);
                 $gallery->delete();
                 return responseCustom([], 200, 'Gallery deleted successfully');
             }

@@ -30,7 +30,7 @@ class ProductSku extends Model
 
     public function images()
     {
-        return $this->hasMany(Gallery::class);
+        return $this->hasMany(ProductGallery::class);
     }
 
     public function scopeWhereProductId($query, $productId)

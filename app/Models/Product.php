@@ -34,7 +34,7 @@ class Product extends Model
 
     public function images():HasMany
     {
-        return $this->hasMany(Gallery::class)->where('product_sku_id', '=', null);
+        return $this->hasMany(ProductGallery::class)->where('product_sku_id', null);
     }
 
     public function brand():BelongsTo
@@ -82,4 +82,13 @@ class Product extends Model
     {
         return $query->where('product_name', 'like', '%' . $keyword . '%');
     }
+    public function scopeWhereSlug($query, $slug): mixed
+    {
+        return $query->where('slug', $slug);
+    }
+
+//    public function scopeWhereImage($query)
+//    {
+//        return $query->whereHas('images');
+//    }
 }

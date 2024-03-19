@@ -43,7 +43,7 @@ Route::prefix('user')->middleware(['auth:api'])->group(function () {
 Route::prefix('media')->group(function () {
     Route::post('/', [GalleryController::class, 'store']);
     Route::delete('/{id}', [GalleryController::class, 'destroy']);
-    Route::put('/{id}', [GalleryController::class, 'update']);
+//    Route::put('/{id}', [GalleryController::class, 'update']);
 });
 //Route::post('/test', [AuthController::class, 'test']);
 

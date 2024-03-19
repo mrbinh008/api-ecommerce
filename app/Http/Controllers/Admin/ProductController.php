@@ -79,7 +79,10 @@ class ProductController extends Controller
                 'is_published' => $request->input('is_published'),
                 'is_featured' => $request->input('is_featured'),
             ]);
-            $this->uploadImage($request->file('image'), $product);
+            if ($request->input('image')) {
+                $this->uploadImage(json_decode($request->input('image'), true), $product);
+            }
+//            $this->uploadImage($request->file('image'), $product);
             $optionData = $this->createOption($product, json_decode($request->input('options'), true));
             $this->createSku($product, json_decode($request->input('skus'), true), $optionData['options'], $optionData['optionValues']);
             $this->storeCategory($product, json_decode($request->input('category'), true));
@@ -99,7 +102,7 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id) : \Illuminate\Http\JsonResponse
+    public function show($id): \Illuminate\Http\JsonResponse
     {
         $product = Product::query()->whereId($id)->first();
         if (!$product) {
@@ -115,12 +118,8 @@ class ProductController extends Controller
             'product_weight' => $product->product_weight,
             'is_published' => $product->is_published,
             'is_featured' => $product->is_featured,
-            'image' => $product->images->transform(function ($image) {
-                return [
-                    'id' => $image->id,
-                    'name' => $image->name,
-                    'path' => $image->path,
-                ];
+            'image' => $product->images()->get()->map(function ($productGallery) {
+                return $productGallery->gallery;
             }),
             'options' => $product->options->transform(function ($option) {
                 return [
@@ -140,12 +139,8 @@ class ProductController extends Controller
                     'sku' => $sku->sku,
                     'price' => $sku->price,
                     'quantity' => $sku->quantity,
-                    'image' => $sku->images->transform(function ($image) {
-                        return [
-                            'id' => $image->id,
-                            'name' => $image->name,
-                            'path' => $image->path,
-                        ];
+                    'image' => $sku->images()->get()->map(function ($productGallery) {
+                        return $productGallery->gallery;
                     }),
                     'values' => $sku->values->transform(function ($value) {
                         return [
@@ -193,11 +188,13 @@ class ProductController extends Controller
                 'is_published' => $request->input('is_published'),
                 'is_featured' => $request->input('is_featured'),
             ]);
-            if ($request->hasFile('image')) {
-                $this->uploadImage($request->file('image'), $product);
+            if ($request->input('image')) {
+                Gallery::query()->whereId($product->images[0]['gallery_id'])->delete();
+                ProductGallery::query()->deleteProductGallery($product->id);
+                $this->uploadImage(json_decode($request->input('image'), true), $product);
             }
             $optionData = $this->updateOption($product, json_decode($request->input('options'), true));
-            $this->updateSku($product, json_decode($request->input('skus'),true), $optionData['options'], $optionData['optionValues']);
+            $this->updateSku($product, json_decode($request->input('skus'), true), $optionData['options'], $optionData['optionValues']);
             $this->updateCategory($product, json_decode($request->input('category'), true));
             DB::commit();
             return responseCustom([], 200, 'Data updated successfully');
@@ -221,18 +218,30 @@ class ProductController extends Controller
     {
         DB::beginTransaction();
         try {
+            $product = Product::query()->whereId($id);
+            if (!$product->exists()) {
+                return responseCustom([], 404, 'Product not found');
+            }
             OptionValue::query()->whereProductId($id)->delete();
             Option::query()->whereProductId($id)->delete();
             SkuValue::query()->whereProductId($id)->delete();
             ProductSku::query()->whereProductId($id)->delete();
-            Gallery::query()->whereProductId($id)->delete();
+            $galleryId = ProductGallery::query()->whereProductId($id)->pluck('gallery_id');
+            Gallery::query()->whereIn('id', $galleryId)->pluck('path')->each(function ($path) {
+                $paths = str_replace(config('app.url') . '/', '', $path);
+                if (\File::exists($paths)) {
+                    \File::delete($paths);
+                }
+            });
+            Gallery::query()->whereIn('id', $galleryId)->delete();
+            ProductGallery::query()->whereProductId($id)->delete();
             ProductCategory::query()->whereProductId($id)->delete();
-            Product::query()->whereId($id)->delete();
+            $product->delete();
             DB::commit();
             return responseCustom([], 200, 'Delete product success');
         } catch (\Exception $e) {
             DB::rollback();
-            \Log::error('Product error :'.$e->getMessage());
+            \Log::error('Product error :' . $e->getMessage());
             return responseCustom([], 500, 'Delete product failed');
         }
     }
@@ -259,6 +268,7 @@ class ProductController extends Controller
             return responseCustom([], 500, 'Change status failed');
         }
     }
+
     /**
      * Change featured product
      *
@@ -327,7 +337,6 @@ class ProductController extends Controller
         try {
             $optionValues = [];
             $options = [];
-            \Log::info($optionArray);
             foreach ($optionArray as $optionData) {
                 $option = Option::create([
                     'product_id' => $product->id,
@@ -343,7 +352,7 @@ class ProductController extends Controller
                     $optionValues[$optionValueData['id']] = $optionValue->id;
                 }
             }
-            \Log::debug(['options' => $options, 'optionValues' => $optionValues]);
+//            \Log::debug(['options' => $options, 'optionValues' => $optionValues]);
             return ['options' => $options, 'optionValues' => $optionValues];
         } catch (\Exception $e) {
             \Log::error('create option error :' . $e->getMessage());
@@ -368,7 +377,7 @@ class ProductController extends Controller
                     'price' => $skuData['price'],
                     'quantity' => $skuData['quantity'],
                 ]);
-                $this->uploadImageSku($skuData['image'], $product, $sku);
+                $this->uploadImage($skuData['image'], $product, $sku);
                 foreach ($skuData['values'] as $valueData) {
                     SkuValue::create([
                         'product_id' => $product->id,
@@ -396,7 +405,6 @@ class ProductController extends Controller
         $optionValues = [];
         $options = [];
         $existingOptionIds = $product->options->pluck('id')->toArray();
-//        dd($optionArray);
         foreach ($optionArray as $optionData) {
             $option = Option::updateOrCreate([
                 'id' => $optionData['id'],
@@ -443,7 +451,6 @@ class ProductController extends Controller
     private function updateSku($product, $skuArray, $options, $optionValues)
     {
         $existingSkuIds = $product->skus->pluck('id')->toArray();
-
         foreach ($skuArray as $skuData) {
             $sku = ProductSku::updateOrCreate([
                 'id' => $skuData['id'],
@@ -453,14 +460,12 @@ class ProductController extends Controller
                 'price' => $skuData['price'],
                 'quantity' => $skuData['quantity'],
             ]);
-            if ($skuData['image']){
-                $this->uploadImageSku($skuData['image'], $product, $sku);
+            if ($skuData['image']) {
+                $this->uploadImage($skuData['image'], $product, $sku);
             }
             unset($existingSkuIds[array_search($sku->id, $existingSkuIds)]);
-
             // Prepare an array to store the new SkuValues
             $newSkuValues = [];
-
             foreach ($skuData['values'] as $valueData) {
                 $newSkuValues[] = [
                     'product_id' => $product->id,
@@ -469,14 +474,11 @@ class ProductController extends Controller
                     'value_id' => isset($valueData['value_id']) ? $optionValues[$valueData['value_id']] : null,
                 ];
             }
-
             // Delete existing SkuValues for this SKU
             SkuValue::where('sku_id', $sku->id)->delete();
-
             // Insert the new SkuValues
             SkuValue::insert($newSkuValues);
         }
-
         // Delete any SKUs that were not in the update.
         ProductSku::whereIn('id', $existingSkuIds)->delete();
     }
@@ -536,65 +538,29 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Upload image product
+     *
+     * @param $image : image object
+     * @param $product : product object
+     * @param null $sku : sku object
+     */
     private function uploadImage($image, $product, $sku = null)
     {
-
+        $images = collect($image)->toArray();
         try {
-            $images = $this->uploadMultiImage($image, 'product-gallery');
             $gallery = [];
             foreach ($images as $img) {
                 $gallery[] = [
                     'product_id' => $product->id,
                     'product_sku_id' => $sku ? $sku->id : null,
-                    'name' => $img['name'],
-                    'path' => $img['path'],
+                    'gallery_id' => $img['response']['id']
                 ];
             }
-            Gallery::query()->insert($gallery);
+            ProductGallery::query()->insert($gallery);
         } catch (\Exception $e) {
             \Log::error('uploadImageProduct error :' . $e->getMessage());
         }
     }
-    private function uploadImageSku($image, $product, $sku)
-    {
-        try {
-            Log::info($image);
-            $images = $this->uploadFileBase64($image, 'sku-gallery');
-//            $images = $this->uploadMultiImage($image, 'sku-gallery');
-            $gallery = [];
-            foreach ($images as $img) {
-                $gallery[] = [
-                    'product_id' => $product->id,
-                    'product_sku_id' => $sku->id,
-                    'name' => $img['name'],
-                    'path' => $img['path'],
-                ];
-            }
-            Gallery::query()->insert($gallery);
-        } catch (\Exception $e) {
-            \Log::error($e->getMessage());
-        }
-    }
-    private function updateImageProduct($product, $image)
-    {
-        try {
-            ProductGallery::query()->whereProdutId($product->id)->update(['gallery_id' => $image]);
-        } catch (\Exception $e) {
-            \Log::error($e->getMessage());
-        }
-    }
 
-
-
-    private function updateImageSku($product, $sku, $image)
-    {
-        try {
-            ProductGallery::query()
-                ->whereProductId($product->id)
-                ->whereProductSkuId($sku->id)
-                ->update(['gallery_id' => $image]);
-        } catch (\Exception $e) {
-            \Log::error($e->getMessage());
-        }
-    }
 }

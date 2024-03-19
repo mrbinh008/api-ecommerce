@@ -41,4 +41,14 @@ class ProductGallery extends Model
     {
         return $query->where('product_sku_id', $productSkuId);
     }
+
+    public function scopeDeleteProductGallery($query, $productId)
+    {
+        return $query->where('product_id', $productId)->where('product_sku_id',null)->delete();
+    }
+
+    public function scopeDeleteGallery($query, $galleryId)
+    {
+        return $query->where('gallery_id', $galleryId)->delete();
+    }
 }

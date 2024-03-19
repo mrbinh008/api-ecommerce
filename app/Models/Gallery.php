@@ -21,22 +21,22 @@ class Gallery extends Model
         return config('app.url') . '/'. $value;
     }
 
-    public static function boot(): void
-    {
-        parent::boot();
-        static::deleting(function ($gallery) {
-            if ($gallery->path) {
-                $path = str_replace(env('APP_URL') . '/', '', $gallery->path);
-                if (file_exists($path)) {
-                    unlink($path);
-                }
-            }
-        });
-    }
+//    public static function boot(): void
+//    {
+//        parent::boot();
+//        static::deleting(function ($gallery) {
+//            if ($gallery->path) {
+//                $path = str_replace(env('APP_URL') . '/', '', $gallery->path);
+//                if (file_exists($path)) {
+//                    unlink($path);
+//                }
+//            }
+//        });
+//    }
 
-    public function product(): BelongsTo
+    public function productGallery(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductGallery::class);
     }
 
     public function productSku(): BelongsTo
